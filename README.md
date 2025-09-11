@@ -4,44 +4,76 @@ This is an example web app that enables an admin to bulk provision Workspaces on
 
 ## Overview
 
-Go into detail about the implementation.   3-4 Sentences
-**HOW** the implementation works. You need not give end-to-end details but an overview.
-
-
-
-### Flow Diagram
-
-<!-- *MANDATORY*  Insert Your Flow Diagram Here (if small PoC, alternative option is to include break down how it works here instead of diagram) -->
-![image/gif](insert img link here)
-
+This web app lets you easily you easily sign in with a Webex Admin account via OAuth and upload a bulk CSV file to bulk create Workspaces or generate Device Activation Codes.
 
 
 ## Setup
 
 ### Prerequisites & Dependencies: 
 
-- Is this dependant on having another repo
-- Insert pre-requisites in bullets
-- Insert pre-requisite here  Also state any assumptions that you may have made about the user.
-- Limit nested bullets
+- Static Web Hosting Service (Local or Server) (Optional)
+- Web Browser
+- Webex Admin Account
 
-
-<!-- GETTING STARTED -->
 
 ### Installation Steps:
-1.  Include step one here
-    ```sh
-    insert line of code here if applicable
+
+You have several options for running the app:
+
+#### Open Directly in Your Browser:
+
+Fastest way to preview the web app.
+
+Steps:
+
+1.	Navigate to the webapp directory.
+
+2.	Double-click index.html or open it with your preferred web browser.
+
+
+#### Run on a Local Web Server:
+  	
+Recommended for development and testing.
+
+Option A: Using Python (no installation required on most systems)
+
+* For Python 3.x:
+
     ```
-2.  Insert step two here
-    Insert screenshot, if applicable
-    
-    
+    cd webapp
+    python -m http.server 8000
+    ```
+
+* For Python 2.x:
+
+    ```
+    cd webapp
+	python -m SimpleHTTPServer 8000
+    ```
+
+
+    Open http://localhost:8000 in your browser.
+
+  	  
+
+Option B: Using Node.js (with http-server)
+
+1.	Install http-server globally (if you haven't already):npm install -g http-server
+
+2.	Start the server from the webapp directory:
+
+    ```
+    cd webapp
+    http-server -p 8000
+    ```
+
+3.	Open http://localhost:8000 in your browser.
+
+
     
 ## Demo
 
 
-<!-- Keep the following statement -->
 *For more demos & PoCs like this, check out our [Webex Labs site](https://collabtoolbox.cisco.com/webex-labs).
 
 
