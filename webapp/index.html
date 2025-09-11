@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title class="webapp-name"></title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-logo webapp-name"></div>
+
+      <div class="nav-right">
+        <p id="nameOrg" class="hidden"></p>
+
+        <img
+          id="avatar"
+          class="avatar hidden"
+          alt="Avatar"
+          src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+        />
+        <button id="logoutButton" class="logout-button hidden">Log Out</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="modal-container hidden" data-state="login">
+        <h2>Welcome!</h2>
+        <p>Please sign in to access the application features.</p>
+        <span id="webexLogin">
+          <button id="loginButton" class="navigation login-button">
+            Sign in with Webex
+          </button>
+          <p>or<br /></p
+        ></span>
+
+        <form>
+          <input
+            type="hidden"
+            id="token_type"
+            name="token_type"
+            value="Personal"
+          />
+          <input
+            type="password"
+            id="access_token"
+            name="access_token"
+            placeholder="Access Token"
+            title="Get Access Token from developer.webex.com"
+            autocomplete="off"
+          /><br /><br />
+          <input
+            type="submit"
+            value="Use own Access Token"
+            class="login-button"
+          />
+        </form>
+      </div>
+
+      <div class="modal-container" data-state="selectOption">
+        <h2>Selection Bulk Operation</h2>
+
+        <div class="center-container">
+          <div class="selection-list">
+            <button class="navigation" data-option="workspaces">
+              Create Workspaces
+            </button>
+            <button class="navigation" data-option="deviceCodes">
+              Generate Device Activation Codes
+            </button>
+            <button class="navigation" data-option="workspacesDeviceCodes">
+              Create Workspaces and <br />Generate Device Activation Codes
+            </button>
+          </div>
+        </div>
+        <!-- 
+        <button class="template-button" data-filename="template1.csv">
+          Bulk Create Workspaces
+        </button>
+
+        <button class="template-button" data-filename="template1.csv">
+          Bulk Geneate Device Activation Codes
+        </button>
+
+        <button class="template-button" data-filename="template1.csv">
+          Bulk 
+        </button> -->
+      </div>
+
+      <div class="modal-container" data-state="workspacesuploadFile">
+        <h2>Create Workspaces</h2>
+
+        <p>Use the editable file below to add multiple workspaces.</p>
+
+        <button class="template-button" data-filename="template1.csv">
+          Download CSV template
+        </button>
+
+        <div class="file-upload-area">
+          <input type="file" class="fileInput" accept=".csv" />
+
+          <div class="uploadFile">
+            <p>Drag & drop a file to upload or</p>
+            <button class="upload-button">Choose a file</button>
+          </div>
+
+          <div class="replaceFile hidden">
+            <p><span id="fileName"></span> uploaded</p>
+            <button class="replace-button">Replace file</button>
+          </div>
+        </div>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+          <button
+            class="navigation navButton next disabled"
+            type="button"
+            data-direction="next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="workspacesreview">
+        <h2>Review Workspaces</h2>
+
+        <p>Checking your workspaces...</p>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+          <button
+            class="navigation navButton next disabled"
+            type="button"
+            data-direction="next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="workspacesrunJob">
+        <h2>Running Job</h2>
+
+        <p>Don't close this page while job is running</p>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="deviceCodesuploadFile">
+        <h2>Generate Device Activation Codes</h2>
+
+        <div class="file-upload-area">
+          <input type="file" class="fileInput" accept=".csv" />
+
+          <div class="uploadFile">
+            <p>Drag & drop a file to upload or</p>
+            <button class="upload-button">Choose a file</button>
+          </div>
+
+          <div class="replaceFile hidden">
+            <p><span id="fileName"></span> uploaded</p>
+            <button class="replace-button">Replace file</button>
+          </div>
+        </div>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+          <button
+            class="navigation navButton next disabled"
+            type="button"
+            data-direction="next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="deviceCodesreview">
+        <h2>Review Workspaces</h2>
+
+        <p>Checking your workspaces...</p>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+          <button
+            class="navigation navButton next disabled"
+            type="button"
+            data-direction="next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="deviceCodesrunJob">
+        <h2>Running Job</h2>
+
+        <p>Don't close this page while job is running</p>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="workspacesDeviceCodesuploadFile">
+        <h2>Create Workspaces and Generate Device Activation Codes</h2>
+
+        <div class="file-upload-area">
+          <input type="file" class="fileInput" accept=".csv" />
+
+          <div class="uploadFile">
+            <p>Drag & drop a file to upload or</p>
+            <button class="upload-button">Choose a file</button>
+          </div>
+
+          <div class="replaceFile hidden">
+            <p><span id="fileName"></span> uploaded</p>
+            <button class="replace-button">Replace file</button>
+          </div>
+        </div>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+          <button
+            class="navigation navButton next disabled"
+            type="button"
+            data-direction="next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="workspacesDeviceCodesreview">
+        <h2>Review Workspaces</h2>
+
+        <p>Checking your workspaces...</p>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+          <button
+            class="navigation navButton next disabled"
+            type="button"
+            data-direction="next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-container" data-state="workspacesDeviceCodesrunJob">
+        <h2>Running Job</h2>
+
+        <p>Don't close this page while job is running</p>
+
+        <div class="navButton-group">
+          <button
+            class="navigation navButton back"
+            type="button"
+            data-direction="back"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>
+        <span class="webapp-name" style="font-weight: bold"></span>
+        by <a href="https://github.com/wxsd-sales">WXSD-Sales</a><br />&copy;
+        <span id="currentYear"></span> Webex by Cisco<br />
+        All rights reserved.
+      </p>
+    </footer>
+
+    <script src="scripts/navigation.js"></script>
+    <script src="scripts/webex.js"></script>
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/main.js"></script>
+  </body>
+</html>

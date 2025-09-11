@@ -1,0 +1,325 @@
+:root {
+  --header-height: 60px;
+  --footer-height: 80px;
+  --body-padding: 20px;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Ensure body takes full viewport height */
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+header {
+  height: var(--header-height);
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+button, input[type="button"], input[type="submit"] {
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1.1em;
+}
+
+.header-logo {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.nav-right{
+  display: flex;
+  align-items: center;
+}
+
+.nav-right img{
+  display: flex;
+  align-items: center;
+  margin-right: 10px
+}
+
+.nav-right p {
+  display: flex;
+
+  align-items: center;
+  margin-right: 10px
+}
+
+.avatar {
+
+  vertical-align: middle;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+
+}
+
+.logout-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+main {
+  min-height: calc(100vh - var(--header-height));
+  flex-grow: 1; /* Body takes up remaining space */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--body-padding);
+  box-sizing: border-box; /* Include padding in height calculation */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+}
+
+.modal-container {
+  background-color: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.modal-container h2 {
+  margin-top: 0;
+  color: #007bff;
+}
+
+.modal-container p {
+  margin-bottom: 25px;
+  font-size: 1.1em;
+  line-height: 1.5;
+}
+
+.login-button {
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #218838;
+}
+
+.upload-button {
+  background-color: #000000;
+  color: white;
+  /* border: none; */
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+  background-color: #424040;
+}
+
+.replace-button {
+  background-color: #00000000;
+  color: #007bff;
+  border: none;
+  font-weight: bold;
+
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.3s ease;
+}
+
+.replace-button:hover {
+  background-color: #424040;
+}
+
+.template-button {
+  background-color: #ffffff;
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.3s ease;
+}
+
+.template-button:hover {
+  background-color: #d9d9d9;
+}
+
+.file-upload-area {
+  border: 2px dashed #636465;
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.file-upload-area.drag-over {
+  background-color: #e6f0ff;
+  border-color: #0056b3;
+}
+
+.file-upload-area p {
+  margin: 10px 0;
+  font-size: 1.1em;
+  color: #555;
+}
+
+.file-upload-area input[type="file"] {
+  display: none; /* Hide default input */
+}
+
+.file-list {
+  margin-top: 20px;
+  text-align: left;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.file-list h3 {
+  margin-top: 0;
+  color: #007bff;
+}
+
+.file-list ul {
+  list-style: none;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.file-list li {
+  background-color: #f9f9f9;
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95em;
+}
+
+.file-list li:last-child {
+  margin-bottom: 0;
+}
+
+footer {
+  height: var(--footer-height);
+  background-color: #343a40;
+  color: white;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9em;
+  flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
+.hidden {
+  display: none !important;
+}
+
+a:link,
+a:visited,
+a:hover,
+a:active {
+  color: rgb(138, 136, 136);
+  text-decoration: none;
+}
+
+.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Or center for vertical centering too */
+}
+
+.selection-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Set desired width */
+  gap: 10px;
+}
+
+.selection-list button {
+  width: 100%;
+  /* box-sizing: border-box;
+  padding: 10px 0;
+  font-size: 16px; */
+
+  background-color: #ffffff;
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background-color 0.3s ease;
+}
+
+.selection-list button:hover {
+  background-color: #d9d9d9;
+}
+
+.navButton-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0; /* No space between buttons unless you want it */
+}
+
+.navButton {
+  /* flex: 1 1 0; */
+
+  /* border: none; */
+  background: #e0e0e0;
+  transition: background 0.2s;
+}
+
+.navButton.back {
+  background: #f5f5f5;
+  text-align: left;
+}
+
+.navButton.next {
+  background: #2196f3;
+  color: #fff;
+  text-align: right;
+}
+
+.navButton:hover {
+  background: #bdbdbd;
+}
+.navButton.next:hover {
+  background: #1976d2;
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
