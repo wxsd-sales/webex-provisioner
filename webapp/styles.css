@@ -2,6 +2,7 @@
   --header-height: 60px;
   --footer-height: 80px;
   --body-padding: 20px;
+  --avatar-height: 35px;
 }
 
 body {
@@ -43,7 +44,13 @@ button, input[type="button"], input[type="submit"] {
   align-items: center;
 }
 
-.nav-right img{
+.nav-right .nav-item{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+/* .nav-right div{
   display: flex;
   align-items: center;
   margin-right: 10px
@@ -51,17 +58,19 @@ button, input[type="button"], input[type="submit"] {
 
 .nav-right p {
   display: flex;
-
   align-items: center;
   margin-right: 10px
-}
+} */
 
 .avatar {
-
+  text-align: center;
   vertical-align: middle;
-  width: 35px;
-  height: 35px;
+  font-size: calc( var(--avatar-height)/3);
+  width: var(--avatar-height);
+  height: var(--avatar-height);
   border-radius: 50%;
+  background-color: #bdc3c7;
+  
 
 }
 

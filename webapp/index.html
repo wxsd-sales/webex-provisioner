@@ -11,15 +11,23 @@
       <div class="header-logo webapp-name"></div>
 
       <div class="nav-right">
-        <p id="nameOrg" class="hidden"></p>
+        <p id="nameOrg" class="nav-item hidden"></p>
 
+        <div></div>
         <img
-          id="avatar"
-          class="avatar hidden"
+          id="avatarImage"
+          class="nav-item avatar hidden"
           alt="Avatar"
           src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
         />
-        <button id="logoutButton" class="logout-button hidden">Log Out</button>
+        <div
+          id="avatarInitials"
+          class="nav-item avatar hidden"
+          data-name=""
+        ></div>
+        <button id="logoutButton" class="nav-item logout-button hidden">
+          Log Out
+        </button>
       </div>
     </header>
 
@@ -57,6 +65,11 @@
         </form>
       </div>
 
+      <div class="modal-container hidden" data-state="loading">
+        <h2>Signing In</h2>
+        <p>Please wait....</p>
+      </div>
+
       <div class="modal-container" data-state="selectOption">
         <h2>Selection Bulk Operation</h2>
 
@@ -73,18 +86,6 @@
             </button>
           </div>
         </div>
-        <!-- 
-        <button class="template-button" data-filename="template1.csv">
-          Bulk Create Workspaces
-        </button>
-
-        <button class="template-button" data-filename="template1.csv">
-          Bulk Geneate Device Activation Codes
-        </button>
-
-        <button class="template-button" data-filename="template1.csv">
-          Bulk 
-        </button> -->
       </div>
 
       <div class="modal-container" data-state="workspacesuploadFile">

@@ -20,7 +20,8 @@ const nav = new Navigation();
 
 //const loginModal = document.getElementById("loginModal");
 const webexLogin = document.getElementById("webexLogin");
-const avatar = document.getElementById("avatar");
+const avatarImage = document.getElementById("avatarImage");
+const avatarInitials = document.getElementById("avatarInitials");
 const nameOrg = document.getElementById("nameOrg");
 const fileUploadModal = document.getElementById("fileUploadModal");
 const loginButton = document.getElementById("loginButton");
@@ -42,23 +43,6 @@ let workspaceNames = [];
 
 // --- Helper Functions ---
 
-
-/**
- * Gets access token and expiry from local storage if present
- * @returns {?object} token
- * @property {string} accessToken - Access Token
- * @property {string} tokenExpiry - Token Expiry
- */
-function getStoredToken() {
-  const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-  const tokenExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
-  const tokenType = localStorage.getItem(TOKEN_TYPE_KEY);
-  return {
-    accessToken,
-    tokenExpiry,
-    tokenType,
-  };
-}
 
 /**
  * Initiates the Webex OAuth login flow.
@@ -150,10 +134,9 @@ logoutButton.addEventListener("click", () => {
 
 
 function logout(){
-
   nav.logout();
-  webex.logout();
-
+  clearStoredCreds();
+  webex?.logout();
 }
 
 // // File input change (for browse button)
@@ -184,27 +167,18 @@ function logout(){
 document.addEventListener("DOMContentLoaded", async () => {
 
   updateWebAppName();
-
   updateCurrentYear();
 
+
   const creds = getCredsFromUrl() ?? getStoredCreds();
-
-
   if (!creds) return;
 
-  console.log('creds', creds)
 
-  const expired = tokenExpired(creds);
-  console.log('expired', expired)
-
-  if (expired) {
-
+  if (tokenExpired(creds)) {
+    logout();
     alert("Access Token Expired. Please login again");
-    
     return
   }
-
-
 
   const auth = {
     accessToken: creds.accessToken,
@@ -215,14 +189,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   webex = new Webex(auth, WEBEX_API_BASE_URL);
 
-  const validToken = await webex.validateToken();
+  // const validToken = await webex.validateToken();
 
-  if(!validToken){
-    alert("Access Not Valid. Please check scopes and try again");
-    
-    return
-
-  }
+  
+  // if(!validToken){
+  //   logout();
+  //   alert("Access Not Valid. Please check scopes and try again");
+  //   return
+  // }
 
   saveCreds(creds);
 
@@ -238,20 +212,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   const photos = me?.[0]?.photos;
   const displayName = me?.[0]?.displayName;
 
-  const thumbnailPhoto = photos?.find(({ type }) => type == "thumbnail")?.value;
+  const thumbnail = photos?.find(({ type }) => type == "thumbnail")?.value;
 
-  avatar.src = thumbnailPhoto;
+  const initials = displayName.split(' ')[0].charAt(0).toUpperCase() + displayName.split(" ")[1].charAt(0).toUpperCase();
+
+  nav.setAvatar({thumbnail, initials})
 
   const org = await webex.getOrg(orgId);
-
   const orgName = org?.displayName ?? "No Org Name";
 
   console.log("DisplayName", displayName);
 
   nameOrg.innerHTML = displayName + "<br>" + orgName;
 
-  avatar.classList.remove("hidden");
   nameOrg.classList.remove("hidden");
+
+  nav.s
+
+  //nav.setOption("workspaces");
+  //nav.moveState("next");
+  nav.moveState("next");
 
   return;
 });

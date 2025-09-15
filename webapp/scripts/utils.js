@@ -36,39 +36,34 @@ document.querySelectorAll(".template-button").forEach((button) => {
   });
 });
 
-
-
 /**
  * Parses the URL hash and searchParams for OAuth tokens and stores them in local storage.
  */
 function getCredsFromUrl() {
+  console.log("Getting Creds from URL");
   const hash = window.location.hash.substring(1); // Remove '#'
   const searchParams = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(hash);
 
-  const accessToken = hashParams.get("access_token") ?? searchParams.get("access_token");
-  const expiresIn = hashParams.get("expires_in") ?? searchParams.get("expires_in");
-  const tokenType = hashParams.get("token_type") ?? searchParams.get("token_type"); 
-
+  const accessToken =
+    hashParams.get("access_token") ?? searchParams.get("access_token");
+  const expiresIn =
+    hashParams.get("expires_in") ?? searchParams.get("expires_in");
+  const tokenType =
+    hashParams.get("token_type") ?? searchParams.get("token_type");
 
   if (accessToken) {
-
-    const expiresSeconds = expiresIn ?? 60*1000; // Use URL Params or set to 60 minutes
-    const expiry = Date.now() + parseInt(expiresSeconds, 10) * 1000; // Convert seconds to milliseconds and add to current time
-
+    const expiresSeconds = expiresIn ?? 60 * 1000; // Use URL Params or set to 60 minutes
+    const expiry = Date.now() + parseInt(expiresSeconds) * 1000; // Convert seconds to milliseconds and add to current time
     // Clear the hash from the URL for a cleaner look
     const { protocol, host, pathname } = window.location;
     const cleanUrl = `${protocol}//${host}${pathname}`;
     window.history.replaceState({}, document.title, cleanUrl);
-
-    return {accessToken, expiry, tokenType}
-
+    return { accessToken, expiry, tokenType };
   } else {
     console.warn("No access_token or expires_in found in hash.");
   }
-
 }
-
 
 /**
  * Saves Access Token, Expiry and Type to local storage
@@ -76,11 +71,21 @@ function getCredsFromUrl() {
  * @property {string} accessToken - Access Token
  * @property {string} tokenExpiry - Token Expiry
  */
-function saveCreds({ accessToken, expiry, tokenType }){
-
+function saveCreds({ accessToken, expiry, tokenType }) {
+  console.log("Saving Creds");
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   localStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
-  localStorage.setItem(TOKEN_TYPE_KEY, tokenType );
+  localStorage.setItem(TOKEN_TYPE_KEY, tokenType);
+}
+
+/**
+ * Clears Stored Access Token, Expiry and Type from local storage
+ */
+function clearStoredCreds() {
+  console.log("Deleting Stored Creds");
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  localStorage.removeItem(TOKEN_TYPE_KEY);
 }
 
 /**
@@ -90,12 +95,16 @@ function saveCreds({ accessToken, expiry, tokenType }){
  * @property {string} tokenExpiry - Token Expiry
  */
 function getStoredCreds() {
+  console.log("Getting Stored Creds");
   const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
   const tokenExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
   const tokenType = localStorage.getItem(TOKEN_TYPE_KEY);
+  if (!accessToken || !tokenExpiry || !tokenType) {
+    return
+  }
   return {
     accessToken,
-    expiry: parseInt(tokenExpiry, 10) * 1000,
+    expiry: parseInt(tokenExpiry, 10),
     tokenType,
   };
 }
@@ -109,20 +118,19 @@ function tokenExpired({ expiry }) {
     return false;
   }
 
-  console.log('DateNow:', Date.now(), 'Expiry:', expiry)
+  console.log(
+    "Current:",
+    Date.now(),
+    "Expiry:",
+    expiry,
+    "Expiry Date::",
+    new Date(expiry)
+  );
 
   // Check if current time is before the expiry time
   return Date.now() > expiry;
 }
 
+function validateCsv(csv, template) {}
 
-function validateCsv(csv, template){
-
-
-}
-
-
-function validateWorkspaces(newWorkspaces, existingWorkspaces){
-
-
-}
+function validateWorkspaces(newWorkspaces, existingWorkspaces) {}

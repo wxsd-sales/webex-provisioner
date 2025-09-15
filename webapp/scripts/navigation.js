@@ -11,16 +11,16 @@ class Navigation {
     );
 
     this.logoutButton = document.getElementById("logoutButton");
-    this.avatar = document.getElementById("avatar");
+    this.avatarImage = document.getElementById("avatarImage");
+    this.avatarInitials = document.getElementById("avatarInitials");
     this.nameOrg = document.getElementById("nameOrg");
 
-    
-
+  
     // Build state list and mapping from data-state attributes
     this.states = {};
     this.stateToModal = {};
 
-    this.baseStates = ['login', 'selectOption', 'uploadFile','review', 'runJob']
+    this.baseStates = ['login', 'loading', 'selectOption', 'uploadFile','review', 'runJob']
 
 
 
@@ -71,11 +71,16 @@ class Navigation {
 
   login() {
     this._setState("selectedOption");
+    this._removeAvatar();
   }
 
   logout() {
     console.log('Setting UI to login')
     this._setState("login");
+  }
+
+  setOption(option){
+    this.selectOption(option);
   }
 
 
@@ -127,49 +132,67 @@ class Navigation {
     this._setState("login");
   }
 
+  setAvatar({thumbnail, initials}){
+    if(thumbnail){
+      console.log('Setting Thumbnail:', thumbnail)
+      this.avatarImage.src = thumbnail;
+    } else {
+      console.log('Setting Innitials:', initials)
+
+      this.avatarInitials.innerHTML = initials;
+    }
+  }
+
+
+  _removeAvatar(){
+    this.avatarImage.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+    this.avatarInitials.innerHTML = "";
+  }
+
+
+
   // Set state only if it exists in the discovered states
   _setState(state) {
     if(state == 'selectOption') this.selectedOption = null;
-    console.log("Setting state to:", state);
-    console.log("Discovered states:", this.states);
-    console.log("selectedOption:", this.selectedOption);
-
+    
     const newState = this.selectedOption ? this.selectedOption + state : state;
 
-    console.log("New state:", newState);
-    console.log("Base States:", this.baseStates);
 
     if ( this.baseStates.includes(state) ) {
       this.currentState = state;
       this.combinedState = newState;
-
-      //this.selectedOption = null;
       this._updateModalVisibility();
     } else {
-      console.warn(`State "${state}" not found among discovered states.`);
+      //console.warn(`State "${state}" not found among discovered states.`);
     }
 
     if(this.currentState == 'login'){
       this.logoutButton.classList.add("hidden");
-       this.avatar.classList.add("hidden");
+       this.avatarInitials.classList.add("hidden");
+       this.avatarImage.classList.add("hidden");
        this.nameOrg.classList.add("hidden");
     } else {
       this.logoutButton.classList.remove("hidden");
-      this.avatar.classList.remove("hidden");
-       this.nameOrg.classList.remove("hidden");
+      
+      this.nameOrg.classList.remove("hidden");
+      if(this.avatarInitials.innerHTML == ""){
+        this.avatarImage.classList.remove("hidden");
+      } else {
+        this.avatarInitials.classList.remove("hidden");
+      }
+
+      
     }
   }
 
   _updateModalVisibility() {
-    console.log("Updating modal visibility for state:", this.combinedState);
-
+    //console.log("Updating modal visibility for state:", this.combinedState);
     Object.entries(this.stateToModal).forEach(([state, modal]) => {
-
       if( state == this.combinedState ){
-        console.log('Showing Modal:', state )
+        //console.log('Showing Modal:', state )
         modal.classList.remove("hidden");
       } else {
-        console.log('Hidding Modal:', state )
+        //console.log('Hidding Modal:', state )
         modal.classList.add("hidden");
        
       }

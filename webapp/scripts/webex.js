@@ -206,7 +206,7 @@ class Webex {
 
   /**
    * Validates Access Token meets required scopes
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    */
   async validateToken() {
 
@@ -220,26 +220,33 @@ class Webex {
     console.log('options', options)
 
     const response = await fetch(
-      "https://idbroker.webex.com/idb/oauth2/v1/tokens/me",
+      "https://idbroker.webex.com/idb/oauth2/v1/tokens/me?authtoken=true",
       options
     );
-
+    console.log('Response:', response.status)
     if (response.status !== 200) {
+      
       return false;
     }
 
+    return true
+
     if (this.#type == "Peronsal") {
+      console.log('Personal Token')
       this.#validToken = true;
       return true;
     }
 
     if (!this.#scopes && !this.#clientId) {
+      console.log('Missing Scopes or ClientId')
       this.#validToken = true;
       return true;
     }
 
     const result = await response.json();
     const data = result?.data;
+
+    console.log('data',data)
 
     const validToken = data.some(
       (auth) =>
