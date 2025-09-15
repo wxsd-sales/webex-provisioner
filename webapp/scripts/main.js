@@ -214,7 +214,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const thumbnail = photos?.find(({ type }) => type == "thumbnail")?.value;
 
-  const initials = displayName.split(' ')[0].charAt(0).toUpperCase() + displayName.split(" ")[1].charAt(0).toUpperCase();
+  const splitName = displayName.split(' ')
+  const initials = splitName?.[0]?.charAt(0)?.toUpperCase() + splitName?.[1]?.charAt(0)?.toUpperCase();
 
   nav.setAvatar({thumbnail, initials})
 
@@ -227,7 +228,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   nameOrg.classList.remove("hidden");
 
-  nav.s
+
 
   //nav.setOption("workspaces");
   //nav.moveState("next");
