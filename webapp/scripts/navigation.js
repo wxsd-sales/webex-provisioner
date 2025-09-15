@@ -167,18 +167,23 @@ class Navigation {
     }
 
     if(this.currentState == 'login'){
+
       this.logoutButton.classList.add("hidden");
        this.avatarInitials.classList.add("hidden");
        this.avatarImage.classList.add("hidden");
        this.nameOrg.classList.add("hidden");
+       
     } else {
+
       this.logoutButton.classList.remove("hidden");
-      
       this.nameOrg.classList.remove("hidden");
+
       if(this.avatarInitials.innerHTML == ""){
+        this.avatarInitials.classList.add("hidden");
         this.avatarImage.classList.remove("hidden");
       } else {
-        this.avatarInitials.classList.remove("hidden");
+        this.avatarImage.classList.remove("hidden");
+        this.avatarInitials.classList.add("hidden");
       }
 
       
