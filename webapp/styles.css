@@ -332,3 +332,38 @@ a:active {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+.actionItems{
+  border-width: 2px;
+  border-color: black;
+  margin-bottom: 20px;
+}
+
+.actionItem {
+  display: flex;
+  align-items: space-between;
+  justify-content: space-between;
+
+  padding: 15px;
+  margin-bottom: 8px;
+
+  border: solid;
+  border-width: 1px;
+  border-color: #00000075;
+
+  border-radius: 8px;
+
+
+
+}
+
+.actionText {
+
+
+}
+
+.actionIcon {
+
+
+}

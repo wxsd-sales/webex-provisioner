@@ -170,6 +170,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateCurrentYear();
 
 
+  nav.moveState("next");
+  nav.moveState("next");
+  nav.setOption("workspaces");
+  nav.moveState("next");
+
+  return
+
+
   const creds = getCredsFromUrl() ?? getStoredCreds();
   if (!creds) return;
 
@@ -188,6 +196,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   webex = new Webex(auth, WEBEX_API_BASE_URL);
+
+  
+
+
+
+  
+
+  return
 
   // const validToken = await webex.validateToken();
 
@@ -230,8 +246,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 
-  //nav.setOption("workspaces");
-  //nav.moveState("next");
+  
+  nav.moveState("next");
+  nav.setOption("workspaces");
   nav.moveState("next");
 
   return;
