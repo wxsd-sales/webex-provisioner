@@ -127,10 +127,7 @@ function handleFiles(files, uploadFile, replaceFile, nextButton, workflow) {
 loginButton.addEventListener("click", startWebexLogin);
 
 // // Logout button click
-logoutButton.addEventListener("click", () => {
-  nav.logout();
-  webex.logout();
-});
+logoutButton.addEventListener("click", logout);
 
 
 function logout(){
