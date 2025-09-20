@@ -33,9 +33,7 @@ const fileName = document.getElementById("fileName");
 const createWorkspacesButton = document.getElementById("createWorkspaces");
 
 
-
 const hostedWebApp = window.location.protocol.startsWith("http");
-
 if (!hostedWebApp) webexLogin.classList.add("hidden");
 
 let webex;
@@ -196,15 +194,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   
 
-
-
-  
-
-  
-
-  // const validToken = await webex.validateToken();
-
-  
+  // const validToken = await webex.validateToken();  
   // if(!validToken){
   //   logout();
   //   alert("Access Not Valid. Please check scopes and try again");
@@ -245,8 +235,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   
   nav.moveState("next");
-  // nav.setOption("workspaces");
-  // nav.moveState("next");
+  //nav.setOption("workspaces");
+  //nav.moveState("next");
 
   return;
 });
@@ -280,25 +270,25 @@ async function test() {
   console.log(workspaces);
 }
 
+
+document.querySelectorAll(".jobReview").forEach((dropArea) => {
+
+
+})
+
+
 // Iterate over each file upload area and add listner
 document.querySelectorAll(".file-upload-area").forEach((dropArea) => {
+
   const modal = dropArea.closest(".modal-container");
-
-  console.log("modal:", modal.getAttribute("data-state"));
-
   const workflow = modal.getAttribute("data-state");
-
-  const nodeList = dropArea.childNodes;
-  console.log("nodeList:", nodeList);
-
+  const nextButton = modal.querySelectorAll(".next")[0];
   const fileInput = dropArea.querySelectorAll(".fileInput")[0];
   const uploadFile = dropArea.querySelectorAll(".uploadFile")[0];
   const replaceFile = dropArea.querySelectorAll(".replaceFile")[0];
-
   const uploadButton = dropArea.querySelectorAll(".upload-button")[0];
   const replaceButton = dropArea.querySelectorAll(".replace-button")[0];
-
-  const nextButton = modal.querySelectorAll(".next")[0];
+ 
 
   uploadButton.addEventListener("click", () => fileInput.click());
   replaceButton.addEventListener("click", () => fileInput.click());
