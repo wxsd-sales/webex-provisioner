@@ -193,15 +193,16 @@ class Webex {
   }
 
   // Create Workspace
-  async createWorkspace(workspaceName) {
-    if(!workspaceName) return null
-    console.log('Creating Workspace:', workspaceName)
-    return this.post(this.#baseUrlPlusVersion + "/workspaces", {displayName: workspaceName});
+  async createWorkspace(displayName) {
+    if(!displayName) return null
+    console.log('Creating Workspace:', displayName)
+    return this.post(this.#baseUrlPlusVersion + "/workspaces", {displayName});
   }
 
   // Create Activation Code
   async createActivationCode(workspaceId) {
-    return this.get(this.#baseUrlPlusVersion + "/rooms", params);
+     console.log('Creating Activate Code for Workspace:', workspaceId)
+    return this.post(this.#baseUrlPlusVersion + "/devices/activationCode", {workspaceId});
   }
 
   /**

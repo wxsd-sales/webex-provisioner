@@ -70,19 +70,91 @@ function updateCurrentYear() {
   currentYear.innerHTML = new Date().getFullYear();
 }
 
-function processStateChange(state) {
+async function processStateChange(state) {
   console.log("Stage Changed:", state);
 
-  switch (state) {
-    case "workspacesreview":
-      processWorkspacesReview();
-      break;
-    case "workspacesrunJob":
-      processWorkspacesRunJob();
-      break;
-    default:
-      break;
+  if (state == "workspacesreview") {
+    processWorkspacesReview();
+  } else if (state == "workspacesrunJob") {
+    const job = parseCSV(jobfile);
+    const workspaces = createWorkspaces(job);
+    const csvExport = nav.addAction("Exporting CSV").loading();
+    downloadJsonAsCsv(workspaces, "workspaces.csv");
+    csvExport.success();
+  } else if (state == "deviceCodesreview") {
+    const checkFile = nav.addAction("Checking File").loading();
+    const validCsv = processCsvFile(jobfile, ["Workspace Name"]);
+
+    if (validCsv) {
+      checkFile.appendText("File looks good!").success();
+    } else {
+      checkFile.appendText("File invalid!").error();
+      return;
+    }
+    const workspaces = createWorkspaces(job);
+  } else if (state == "devicCodesrunJob") {
+    const job = parseCSV(jobfile);
+    const workspaces = await createWorkspaces(job);
+    const activationCodes = await generateActivationCodes();
+    const csvExport = nav.addAction("Exporting CSV").loading();
+    downloadJsonAsCsv(workspaces, "workspaces.csv");
+    csvExport.success();
+  } else if (state == "workspacesDeviceCodesreview") {
+    const checkFile = nav.addAction("Checking File").loading();
+    const validCsv = processCsvFile(jobfile, ["Workspace Name"]);
+
+    if (validCsv) {
+      checkFile.appendText("File looks good!").success();
+    } else {
+      checkFile.appendText("File invalid!").error();
+      return;
+    }
+
+    const job = parseCSV(jobfile);
+
+    const workspaceAction = nav.addAction("Querying Existing Workspaces");
+    const workspaces = await webex.listWorkspaces(workspaceAction);
+
+    if(workspaces){
+      workspaceAction.success();
+    } else {
+      workspaceAction.error();
+      return;
+    }
+
+    const existingWorkspaceNames = workspaces.map(
+      (workspace) => workspace.displayName
+    );
+
+    const newWorksapcesNames = job.map((row) => row["Workspace Name"]);
+    const checkingConflicts = nav.addAction("Checking Conflicts").loading();
+
+    const conflicts = checkConflicts(
+      existingWorkspaceNames,
+      newWorksapcesNames
+    );
+
+    console.log("conflicts", conflicts);
+
+
+    if (conflicts.length > 0) {
+      checkingConflicts
+        .appendText("Conflicts Found: " + conflicts.length)
+        .error();
+    } else {
+      checkingConflicts.appendText("No Conflicts").success();
+    }
+    nav.enableNext();
+  } else if (state == "workspacesDeviceCodesrunJob") {
+    const job = parseCSV(jobfile);
+    const workspaces = await createWorkspaces(job);
+    const activationCodes = await generateActivationCodes(workspaces);
+    console.log(activationCodes)
+    const csvExport = nav.addAction("Exporting CSV").loading();
+    downloadJsonAsCsv(activationCodes, "workspaces.csv");
+    csvExport.success();
   }
+
 }
 
 /**
@@ -265,6 +337,21 @@ async function processWorkspacesReview() {
   nav.enableNext();
 }
 
+async function getWorkspaces(action) {
+  return new Promise(async (resolve, reject) => {
+    const workspaces = await webex.listWorkspaces(
+      {},
+      (found) => {
+        action.setText("Workspaces Found: " + found);
+      },
+      (workspaces) => {
+        acction.setText("Workspaces Found: " + workspaces.length).success();
+        resolve(workspaces);
+      }
+    );
+  });
+}
+
 async function processWorkspacesRunJob() {
   console.log("Processing Workspaces RunJob");
 
@@ -293,48 +380,54 @@ async function processWorkspacesRunJob() {
   downloadJsonAsCsv(results, "workspaces.csv");
 
   return;
+}
 
-  const checkWorkspaces = nav.addAction("Querying Existing Workspaces");
+async function createWorkspaces(job) {
+  console.log("Createing Workspaces Workspaces");
 
-  const workspaces = await webex.listWorkspaces(
-    {},
-    (found) => {
-      console.log("Workspaces");
-    },
-    (workspaces) => {
-      nav.updateAction(
-        checkWorkspaces,
-        "Workspaces Found: " + workspaces.length,
-        "success"
-      );
+  const results = [];
+
+  const createWorkspaces = nav.addAction("Creating Workspaces");
+
+  for (let i = 0; i < job.length; i++) {
+    createWorkspaces.setText("Created:  " + i + "/" + job.length);
+    const workspaceName = job[i]["Workspace Name"];
+    console.log("workspaceName", workspaceName);
+    const newWorkspace = await webex.createWorkspace(workspaceName);
+    if (newWorkspace) {
+      const id = newWorkspace.id;
+      results.push({ id, ...job[i] });
     }
-  );
-
-  console.log(workspaces);
-
-  const checkingConflicts = nav.addAction("Checking Conflicts");
-
-  const existingWorkspaceNames = workspaces.map(
-    (workspace) => workspace.displayName
-  );
-  const newWorksapcesNames = job.map((row) => row["Workspace Name"]);
-  console.log("job", job);
-
-  const conflicts = checkConflicts(existingWorkspaceNames, newWorksapcesNames);
-
-  console.log("conflicts", conflicts);
-
-  if (conflicts.length > 0) {
-    nav.updateAction(
-      checkingConflicts,
-      "Conflicts Found: " + conflicts.length,
-      "error"
-    );
-  } else {
-    nav.updateAction(checkingConflicts, "No Conflicts", "success");
   }
 
-  nav.enableNext();
+  createWorkspaces.setText("Created:  " + results.length + "/" + job.length);
+
+  createWorkspaces.success();
+  return results
+}
+
+async function generateActivationCodes(workspaces) {
+  console.log("Generating Acitvation Codes");
+  const results = [];
+  const action = nav.addAction("Generating Activation Codes");
+
+  for (let i = 0; i < workspaces.length; i++) {
+    action.setText("Generated:  " + i + "/" + workspaces.length);
+    const workspaceId = workspaces[i]["id"];
+    console.log("workspaceId", workspaceId);
+    const activation = await webex.createActivationCode(workspaceId);
+    console.log('activation', activation );
+    if (activation) {
+      const { code, expiryTime } = activation;
+
+      results.push({ ...workspaces[i], code, expiryTime });
+    }
+  }
+
+  action.setText("Generated:  " + results.length + "/" + workspaces.length);
+  action.success();
+
+  return results
 }
 
 async function test() {
@@ -378,6 +471,7 @@ document.querySelectorAll(".file-upload-area").forEach((dropArea) => {
   const uploadButton = dropArea.querySelectorAll(".upload-button")[0];
   const replaceButton = dropArea.querySelectorAll(".replace-button")[0];
 
+  console.log("Filename", filename);
   uploadButton.addEventListener("click", () => fileInput.click());
   replaceButton.addEventListener("click", () => fileInput.click());
 
