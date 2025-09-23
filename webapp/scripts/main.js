@@ -1,7 +1,8 @@
 // --- Configuration ---
 
 const WEBAPP_NAME = "Webex Provisioner";
-const WEBEX_CLIENT_ID = "C2259fa2711278160440c28b1927e845cdc0e14daadc5595ec0b6ad513cab84ca";
+const WEBEX_CLIENT_ID =
+  "C2259fa2711278160440c28b1927e845cdc0e14daadc5595ec0b6ad513cab84ca";
 const WEBEX_SCOPES = [
   "spark:kms",
   "spark-admin:workspaces_read",
@@ -15,6 +16,7 @@ const WEBEX_OAUTH_BASE_URL = "https://webexapis.com/v1/authorize";
 const WEBEX_API_BASE_URL = "https://webexapis.com/v1";
 
 const nav = new Navigation();
+nav.onStateChange(processStateChange);
 
 // --- DOM Elements ---
 
@@ -29,18 +31,17 @@ const dropArea = document.getElementById("dropArea");
 const fileInput = document.getElementById("fileInput");
 const uploadFile = document.getElementById("uploadFile");
 const replaceFile = document.getElementById("replaceFile");
-const fileName = document.getElementById("fileName");
+// const fileName = document.getElementById("fileName");
 const createWorkspacesButton = document.getElementById("createWorkspaces");
-
 
 const hostedWebApp = window.location.protocol.startsWith("http");
 if (!hostedWebApp) webexLogin.classList.add("hidden");
 
 let webex;
 let workspaceNames = [];
+let jobfile;
 
 // --- Helper Functions ---
-
 
 /**
  * Initiates the Webex OAuth login flow.
@@ -69,41 +70,48 @@ function updateCurrentYear() {
   currentYear.innerHTML = new Date().getFullYear();
 }
 
+function processStateChange(state) {
+  console.log("Stage Changed:", state);
+
+  switch (state) {
+    case "workspacesreview":
+      processWorkspacesReview();
+      break;
+    case "workspacesrunJob":
+      processWorkspacesRunJob();
+      break;
+    default:
+      break;
+  }
+}
+
 /**
  * Handles files selected via input or drag-and-drop.
  * @param {FileList} files - The list of File objects.
  */
-function handleFiles(files, uploadFile, replaceFile, nextButton, workflow) {
+function handleFiles(files, uploadFile, replaceFile, nextButton, fileName) {
   if (files.length === 0) {
     fileListElement.innerHTML = "";
     uploadFile.classList.remove("hidden");
     replaceFile.classList.add("hidden");
     nextButton.classList.add("disabled");
     fileName.innerHTML = ""; // Clear previous filename
+    jobfile = null;
+    nav.disableNext();
     return;
   }
 
   const file = files[0];
 
   console.log("File Obtained");
-
   console.log("uploadFile:", uploadFile);
   console.log("replaceFile:", replaceFile);
 
   // Read the file
   const reader = new FileReader();
   reader.onload = () => {
-    const lines = reader.result.split("\r\n").map((line) => line.trim());
-
-    console.log(JSON.stringify(lines));
-
-    //if(line[0] != 'Workspace Name") // Handle
-
-    const workspaces = lines.filter(
-      (line) => line !== "" && line != "Workspace Name"
-    );
-
-    console.log("File Length:", workspaces.length);
+    jobfile = reader.result;
+    nav.enableNext();
 
     uploadFile.classList.add("hidden");
     replaceFile.classList.remove("hidden");
@@ -127,60 +135,24 @@ loginButton.addEventListener("click", startWebexLogin);
 // // Logout button click
 logoutButton.addEventListener("click", logout);
 
-
-function logout(){
+function logout() {
   nav.logout();
   clearStoredCreds();
   webex?.logout();
 }
 
-// // File input change (for browse button)
-// fileInput.addEventListener("change", (event) => {
-//   handleFiles(event.target.files);
-// });
-
-// // Drag and drop events
-// dropArea.addEventListener("dragover", (event) => {
-//   event.preventDefault(); // Prevent default to allow drop
-//   dropArea.classList.add("drag-over");
-// });
-
-// dropArea.addEventListener("dragleave", (event) => {
-//   event.preventDefault();
-//   dropArea.classList.remove("drag-over");
-// });
-
-// dropArea.addEventListener("drop", (event) => {
-//   event.preventDefault();
-//   dropArea.classList.remove("drag-over");
-//   const files = event.dataTransfer.files;
-//   fileInput.files = files; // Assign files to the input for consistency
-//   handleFiles(files);
-// });
-
 // --- Initialization ---
 document.addEventListener("DOMContentLoaded", async () => {
-
   updateWebAppName();
   updateCurrentYear();
-
-
-  // nav.moveState("next");
-  // nav.moveState("next");
-  // nav.setOption("workspaces");
-  // nav.moveState("next");
-
-  // return
-
 
   const creds = getCredsFromUrl() ?? getStoredCreds();
   if (!creds) return;
 
-
   if (tokenExpired(creds)) {
     logout();
     alert("Access Token Expired. Please login again");
-    return
+    return;
   }
 
   const auth = {
@@ -192,9 +164,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   webex = new Webex(auth, WEBEX_API_BASE_URL);
 
-  
-
-  // const validToken = await webex.validateToken();  
+  // const validToken = await webex.validateToken();
   // if(!validToken){
   //   logout();
   //   alert("Access Not Valid. Please check scopes and try again");
@@ -202,25 +172,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   // }
 
   saveCreds(creds);
-
-  nav.moveState("next");
+  nav.enableNext();
+  nav.next();
 
   const me = await webex.getMe();
 
   const orgId =
     me?.[0]?.["urn:scim:schemas:extension:cisco:webexidentity:2.0:User"]?.meta
       ?.organizationId;
-  console.log("orgid", orgId);
 
   const photos = me?.[0]?.photos;
   const displayName = me?.[0]?.displayName;
-
   const thumbnail = photos?.find(({ type }) => type == "thumbnail")?.value;
+  const splitName = displayName.split(" ");
+  const initials =
+    splitName?.[0]?.charAt(0)?.toUpperCase() +
+    splitName?.[1]?.charAt(0)?.toUpperCase();
 
-  const splitName = displayName.split(' ')
-  const initials = splitName?.[0]?.charAt(0)?.toUpperCase() + splitName?.[1]?.charAt(0)?.toUpperCase();
-
-  nav.setAvatar({thumbnail, initials})
+  nav.setAvatar({ thumbnail, initials });
 
   const org = await webex.getOrg(orgId);
   const orgName = org?.displayName ?? "No Org Name";
@@ -231,64 +200,183 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   nameOrg.classList.remove("hidden");
 
+  nav.next();
 
+  //test();
+});
 
-  
-  nav.moveState("next");
-  //nav.setOption("workspaces");
-  //nav.moveState("next");
+async function processWorkspacesReview() {
+  console.log("Processing Workspaces Review");
+
+  const checkFile = nav.addAction("Checking File").loading();
+
+  console.log("checkfile", checkFile);
+
+  const validCsv = processCsvFile(jobfile, ["Workspace Name"]);
+
+  // Check File
+  if (validCsv) {
+    checkFile.appendText("File looks good!").success();
+  } else {
+    checkFile.appendText("File invalid!").error();
+    return;
+  }
+
+  const job = parseCSV(jobfile);
+
+  const checkWorkspaces = nav
+    .addAction("Querying Existing Workspaces")
+    .loading();
+
+  const workspaces = await webex.listWorkspaces(
+    {},
+    (found) => {
+      console.log("Workspaces");
+    },
+    (workspaces) => {
+      checkWorkspaces
+        .appendText("Workspaces Found: " + workspaces.length)
+        .success();
+    }
+  );
+
+  console.log(workspaces);
+
+  const checkingConflicts = nav.addAction("Checking Conflicts").loading();
+
+  const existingWorkspaceNames = workspaces.map(
+    (workspace) => workspace.displayName
+  );
+  const newWorksapcesNames = job.map((row) => row["Workspace Name"]);
+  console.log("job", job);
+
+  const conflicts = checkConflicts(existingWorkspaceNames, newWorksapcesNames);
+
+  console.log("conflicts", conflicts);
+
+  if (conflicts.length > 0) {
+    checkingConflicts
+      .appendText("Conflicts Found: " + conflicts.length)
+      .error();
+  } else {
+    checkingConflicts.appendText("No Conflicts").success();
+  }
+
+  nav.enableNext();
+}
+
+async function processWorkspacesRunJob() {
+  console.log("Processing Workspaces RunJob");
+
+  const job = parseCSV(jobfile);
+
+  const results = [];
+
+  const createWorkspaces = nav.addAction("Creating Workspaces");
+
+  for (let i = 0; i < job.length; i++) {
+    createWorkspaces.setText("Created:  " + i + "/" + job.length);
+    const workspaceName = job[i]["Workspace Name"];
+    const newWorkspace = await webex.createWorkspace(workspaceName);
+    if (newWorkspace) {
+      const id = newWorkspace.id;
+      results.push({ id, ...job[i] });
+    }
+  }
+
+  createWorkspaces.setText("Created:  " + results.length + "/" + job.length);
+
+  createWorkspaces.success();
+
+  console.log(results);
+
+  downloadJsonAsCsv(results, "workspaces.csv");
 
   return;
-});
+
+  const checkWorkspaces = nav.addAction("Querying Existing Workspaces");
+
+  const workspaces = await webex.listWorkspaces(
+    {},
+    (found) => {
+      console.log("Workspaces");
+    },
+    (workspaces) => {
+      nav.updateAction(
+        checkWorkspaces,
+        "Workspaces Found: " + workspaces.length,
+        "success"
+      );
+    }
+  );
+
+  console.log(workspaces);
+
+  const checkingConflicts = nav.addAction("Checking Conflicts");
+
+  const existingWorkspaceNames = workspaces.map(
+    (workspace) => workspace.displayName
+  );
+  const newWorksapcesNames = job.map((row) => row["Workspace Name"]);
+  console.log("job", job);
+
+  const conflicts = checkConflicts(existingWorkspaceNames, newWorksapcesNames);
+
+  console.log("conflicts", conflicts);
+
+  if (conflicts.length > 0) {
+    nav.updateAction(
+      checkingConflicts,
+      "Conflicts Found: " + conflicts.length,
+      "error"
+    );
+  } else {
+    nav.updateAction(checkingConflicts, "No Conflicts", "success");
+  }
+
+  nav.enableNext();
+}
+
+async function test() {
+  console.log("Testing");
+  //nav.enableNext();
+  //nav.next();
+  //nav.enableNext();
+  nav.setOption("workspaces");
+
+  jobfile = await loadCsvFileFromServer(
+    "templates/template1.csv",
+    "example.csv"
+  );
+
+  nav.enableNext();
+
+  //nav.addAction("No Conflicts", "error");
+
+  nav.next();
+
+  setTimeout(() => {
+    nav.next();
+  }, 1000);
+}
 
 function workspacesFound(count) {
   console.log(`Fetched so far: ${count}`);
 }
 
-async function test() {
-  const auth = {
-    accessToken: localStorage.getItem(ACCESS_TOKEN_KEY),
-    type: localStorage.getItem(TOKEN_TYPE_KEY),
-    clientId: WEBEX_CLIENT_ID,
-    scopes: WEBEX_SCOPES,
-  };
-
-  webex = new Webex(auth, WEBEX_API_BASE_URL);
-
-  const result = await webex.validateToken();
-
-  console.log(JSON.stringify(result));
-
-  return;
-
-  const workspaces = await webex.listWorkspaces(
-    { max: 1000 },
-    workspacesFound,
-    (allRooms) => console.log(`Complete! Total: ${allRooms.length}`) // onComplete
-  );
-
-  console.log(workspaces);
-}
-
-
-document.querySelectorAll(".jobReview").forEach((dropArea) => {
-
-
-})
-
+document.querySelectorAll(".jobReview").forEach((dropArea) => {});
 
 // Iterate over each file upload area and add listner
 document.querySelectorAll(".file-upload-area").forEach((dropArea) => {
-
   const modal = dropArea.closest(".modal-container");
   const workflow = modal.getAttribute("data-state");
   const nextButton = modal.querySelectorAll(".next")[0];
+  const filename = dropArea.querySelectorAll(".filename")[0];
   const fileInput = dropArea.querySelectorAll(".fileInput")[0];
   const uploadFile = dropArea.querySelectorAll(".uploadFile")[0];
   const replaceFile = dropArea.querySelectorAll(".replaceFile")[0];
   const uploadButton = dropArea.querySelectorAll(".upload-button")[0];
   const replaceButton = dropArea.querySelectorAll(".replace-button")[0];
- 
 
   uploadButton.addEventListener("click", () => fileInput.click());
   replaceButton.addEventListener("click", () => fileInput.click());
@@ -299,14 +387,9 @@ document.querySelectorAll(".file-upload-area").forEach((dropArea) => {
       uploadFile,
       replaceFile,
       nextButton,
-      workflow
+      filename
     );
   });
-
-  console.log("fileInput:", fileInput);
-  console.log("uploadFile:", uploadFile);
-  console.log("replaceFile:", replaceFile);
-  console.log("nextButton:", nextButton);
 
   // Drag and drop events
   dropArea.addEventListener("dragover", (event) => {
@@ -324,35 +407,6 @@ document.querySelectorAll(".file-upload-area").forEach((dropArea) => {
     dropArea.classList.remove("drag-over");
     const files = event.dataTransfer.files;
     fileInput.files = files; // Assign files to the input for consistency
-    handleFiles(files, uploadFile, replaceFile, nextButton, workflow);
+    handleFiles(files, uploadFile, replaceFile, nextButton, filename);
   });
-
-  // button.addEventListener("click", function () {
-  //   // Get the filename from the 'data-filename' attribute of the clicked button
-  //   const filename = this.dataset.filename;
-
-  //   if (!filename) {
-  //     console.error("No data-filename attribute found on this button:", this);
-  //     alert("Error: Could not determine file to download.");
-  //     return;
-  //   }
-
-  //   // Construct the full URL to the file
-  //   const fileUrl = "templates/" + filename;
-
-  //   // Create a temporary anchor element
-  //   const link = document.createElement("a");
-  //   link.href = fileUrl;
-  //   link.download = filename; // Suggest the filename for the download
-
-  //   // Append to the body (required for Firefox to trigger download)
-  //   document.body.appendChild(link);
-
-  //   // Programmatically click the link to trigger the download
-  //   link.click();
-
-  //   // Clean up: remove the temporary link after clicking
-  //   document.body.removeChild(link);
-
-  //   console.log(`Attempting to download: ${filename} from ${fileUrl}`);
 });

@@ -123,8 +123,6 @@ class Webex {
 
       results = results.concat(items);
 
-      console.log("Typeof onProgress:", typeof onProgress);
-      console.log("Typeof onComplete:", typeof onComplete);
       if (typeof onProgress === "function") {
         try {
           onProgress(results.length);
@@ -184,22 +182,24 @@ class Webex {
     return result?.[0]
   }
 
-  // List workspaces
+  // List Locations
   async listLocations(params = {}, onProgress = null, onComplete = null) {
     return this.get(this.#baseUrlPlusVersion + "/locations", params, onProgress, onComplete);
   }
 
-  // List workspaces
+  // List Workspaces
   async listWorkspaces(params = {}, onProgress = null, onComplete = null) {
     return this.get(this.#baseUrlPlusVersion + "/workspaces", params, onProgress, onComplete);
   }
 
-  //  create Workspace
+  // Create Workspace
   async createWorkspace(workspaceName) {
-    return this.get(this.#baseUrlPlusVersion + "/workspaces", params);
+    if(!workspaceName) return null
+    console.log('Creating Workspace:', workspaceName)
+    return this.post(this.#baseUrlPlusVersion + "/workspaces", {displayName: workspaceName});
   }
 
-  // create Activation Code
+  // Create Activation Code
   async createActivationCode(workspaceId) {
     return this.get(this.#baseUrlPlusVersion + "/rooms", params);
   }

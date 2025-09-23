@@ -100,7 +100,7 @@ function getStoredCreds() {
   const tokenExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
   const tokenType = localStorage.getItem(TOKEN_TYPE_KEY);
   if (!accessToken || !tokenExpiry || !tokenType) {
-    return
+    return;
   }
   return {
     accessToken,
@@ -134,3 +134,230 @@ function tokenExpired({ expiry }) {
 function validateCsv(csv, template) {}
 
 function validateWorkspaces(newWorkspaces, existingWorkspaces) {}
+
+async function loadCsvFileFromServer(filePath, fileName) {
+  try {
+    // 1. Fetch the CSV file content from the server
+    const response = await fetch(filePath);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const csvText = await response.text();
+    [7, 10, 20, 21];
+
+    // 2. Create a Blob from the CSV text content
+    // The 'type' should match the MIME type of a CSV file.
+    const blob = new Blob([csvText], { type: "text/csv" });
+
+    // 3. Create a File object from the Blob
+    // The File constructor takes a Blob, a filename, and an optional options object.
+    const file = new File([blob], fileName, {
+      type: "text/csv",
+      lastModified: new Date().getTime(),
+    });
+
+    // --- IMPORTANT: Direct assignment to input.files is NOT allowed for security reasons ---
+    // The following lines are for demonstration of how you *might* handle the created File object,
+    // but it CANNOT be assigned to the 'files' property of an <input type="file"> element.
+    // For example, you can process the file directly:
+    console.log("File object created:", file);
+    console.log("File name:", file.name);
+    console.log("File size:", file.size, "bytes");
+    console.log("File type:", file.type);
+
+    // Example: Read the content of the created File object
+    const reader = new FileReader();
+
+    return new Promise((resolve, reject) => {
+      reader.onload = (e) => {
+        resolve(e.target.result);
+      };
+
+      reader.onerror = (e) => {
+        reject(e.target.error);
+      };
+
+      reader.readAsText(file);
+    });
+  } catch (error) {
+    return null;
+  }
+}
+
+function processCsvFile(csvContent, requiredHeaders = ["Name"]) {
+  let isValid = true;
+  let validationMessages = [];
+
+  // 1. Parse CSV content
+  const lines = csvContent.trim().split("\n");
+  if (lines.length === 0) {
+    validationMessages.push("The CSV file is empty");
+    isValid = false;
+  }
+
+  // 2. Validate column names (headers)
+  const headers = lines[0].split(",").map((header) => header.trim());
+
+  if (headers.length !== requiredHeaders.length) {
+    validationMessages.push(
+      `Header count mismatch. Expected ${requiredHeaders.length} columns, but found ${headers.length}.`
+    );
+    isValid = false;
+  } else {
+    for (let i = 0; i < requiredHeaders.length; i++) {
+      if (headers[i] !== requiredHeaders[i]) {
+        validationMessages.push(
+          `Column mismatch at position ${i + 1}. requiredHeaders "${
+            requiredHeaders[i]
+          }", but found "${headers[i]}".`
+        );
+        isValid = false;
+      }
+    }
+  }
+
+  // 3. Check for duplicates in the first column (assuming it's the 'ID' column as per expectedHeaders)
+  const firstColumnValues = [];
+  const seenValues = new Set(); // Using a Set for efficient duplicate checking [2, 3, 4]
+  const duplicateRows = new Map(); // To store rows where duplicates are found
+
+  // Start from the second line (index 1) to skip headers
+  for (let i = 1; i < lines.length; i++) {
+    const row = lines[i].split(",").map((cell) => cell.trim());
+    if (row.length > 0 && row[0] !== "") {
+      // Ensure the row is not empty and the first cell is not empty
+      const value = row[0];
+      if (seenValues.has(value)) {
+        if (!duplicateRows.has(value)) {
+          duplicateRows.set(value, [i]); // Store the current row index (1-based)
+        }
+        duplicateRows.get(value).push(i);
+        isValid = false; // Mark as invalid if duplicates are found
+      }
+      seenValues.add(value);
+      firstColumnValues.push(value);
+    }
+  }
+
+  if (duplicateRows.size > 0) {
+    duplicateRows.forEach((rows, value) => {
+      validationMessages.push(
+        `Duplicate value "${value}" found in the first column (Name) at rows: ${rows
+          .map((r) => r + 1)
+          .join(", ")}.`
+      );
+    });
+  }
+
+  return validationMessages;
+}
+
+function parseCSV(csvText) {
+  // Split the CSV into lines, trim whitespace
+  const lines = csvText.trim().split(/\r?\n/);
+
+  if (lines.length === 0) return [];
+
+  // Split headers, handling simple quoted fields
+  const headers = splitCSVLine(lines[0]);
+
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = splitCSVLine(lines[i]);
+    const rowObj = {};
+    headers.forEach((header, idx) => {
+      rowObj[header] =
+        values[idx] !== undefined && values[idx] !== "" ? values[idx] : null;
+    });
+    rows.push(rowObj);
+  }
+  return rows;
+}
+
+
+// Helper to split a CSV line into fields, supporting quoted values with commas
+function splitCSVLine(line) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        // escaped quote
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function checkConflicts(existingWorkspaces, newWorkspaces) {
+  const conflicts = [];
+
+  const existingWorkspacesSet = new Set(existingWorkspaces);
+
+  for (const workspace of newWorkspaces) {
+    if (existingWorkspacesSet.has(workspace)) {
+      conflicts.push(workspace);
+    }
+  }
+
+  return conflicts;
+}
+
+function downloadJsonAsCsv(jsonData, filename = "data.csv") {
+  if (!Array.isArray(jsonData) || jsonData.length === 0) {
+    console.warn("Input JSON data must be a non-empty array of objects.");
+    return;
+  }
+
+  const headers = Object.keys(jsonData[0]);
+  const csvHeader = headers
+    .map((header) => `"${header.replace(/"/g, '""')}"`)
+    .join(",");
+
+  const csvRows = jsonData.map((row) => {
+    return headers
+      .map((header) => {
+        let value = row[header];
+        if (value === null || value === undefined) {
+          value = "";
+        } else if (typeof value === "object") {
+          value = JSON.stringify(value);
+        } else {
+          value = String(value);
+        }
+        if (
+          value.includes(",") ||
+          value.includes("\n") ||
+          value.includes('"')
+        ) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      })
+      .join(",");
+  });
+
+  const csvString = [csvHeader, ...csvRows].join("\n");
+  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

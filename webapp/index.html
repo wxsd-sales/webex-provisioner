@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title class="webapp-name"></title>
     <link rel="stylesheet" href="styles.css" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+<link rel="manifest" href="images/site.webmanifest">
+
   </head>
   <body>
     <header>
@@ -98,7 +104,7 @@
         </button>
 
         <div class="file-upload-area">
-          <input type="file" class="fileInput" accept=".csv" />
+          <input id="myCsvFileInput" type="file" class="fileInput" accept=".csv" />
 
           <div class="uploadFile">
             <p>Drag & drop a file to upload or</p>
@@ -106,7 +112,7 @@
           </div>
 
           <div class="replaceFile hidden">
-            <p><span id="fileName"></span> uploaded</p>
+            <p><span class="filename"></span> uploaded</p>
             <button class="replace-button">Replace file</button>
           </div>
         </div>
@@ -132,26 +138,7 @@
       <div class="modal-container" data-state="workspacesreview">
         <h2>Create Workspaces Review</h2>
 
-        <div class="actionItems jobReview">
-          <div class="actionItem">
-            <span class="actionText">Checking File</span>
-            <span class="svg-spinners--180-ring"></span>
-            
-          </div>
-          <div class="actionItem">
-            <span class="actionText">Checking File</span>
-            <!-- <span class="actionText">Icon</span> -->
-            <span class="mdi--success-bold"></span>
-            
-          </div>
-          <div class="actionItem">
-            <span class="actionText">Existing Workspaces</span>
-            <span class="mdi--cross-circle"></span>
-          </div>
-          <div class="actionItem">
-            <span class="actionText">Existing Workspaces</span>
-            <span class="mdi--error-outline"></span>
-          </div>
+        <div class="actionItems">
           
         </div>
 
@@ -179,14 +166,7 @@
         <p>Don't close this page while job is running</p>
 
         <div class="actionItems">
-          <div class="actionItem">
-            <span class="actionText">Creating Workspaces</span>
-            <span class="actionText">Icon</span>
-          </div>
-          <div class="actionItem">
-            <span class="actionText">Generative Report</span>
-            <span class="actionText">Icon</span>
-          </div>
+          
         </div>
 
         <div class="navButton-group">
@@ -373,6 +353,7 @@
       </p>
     </footer>
 
+    <script src="scripts/actions.js"></script>
     <script src="scripts/navigation.js"></script>
     <script src="scripts/webex.js"></script>
     <script src="scripts/utils.js"></script>
