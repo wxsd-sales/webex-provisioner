@@ -2,15 +2,17 @@ class Action {
   element;
   actionText;
   actionIcon;
+  actionNoteList;
   title;
   nav;
 
   /**
    * Adds Action to review or job screen
    * @param {String} title action text
-   * @param {String = 'spinner' | 'error' | 'warning' | 'success' "} [icon = 'spinner'] - icon
+   * @param {String = 'loading' | 'error' | 'warning' | 'success' "} [icon = 'loading'] - icon
    */
   constructor(title, icon, nav) {
+    console.log('Creating Action:', title, icon)
     this.nav = nav;
     this.title = title;
     const allowedIcons = ["loading", "error", "warning", "success"];
@@ -22,24 +24,35 @@ class Action {
     this.actionText.classList.add("actionText");
     this.actionIcon = document.createElement("span");
     this.actionIcon.classList.add(icon);
-    this.element.appendChild(this.actionText);
+    this.actionNoteList = document.createElement("ul");
+    this.actionNoteList.classList.add("actionNotes");
+    this.actionLeft = document.createElement("div");
+
+    this.actionLeft.classList.add("actionLeft");
+    this.actionLeft.appendChild(this.actionText);
+    this.actionLeft.appendChild(this.actionNoteList);
+
+    this.element.appendChild(this.actionLeft);
     this.element.appendChild(this.actionIcon);
   }
 
   appendText(text) {
-    console.log(
-      "Appending Text:",
-      text,
-      "Typeof:",
-      typeof text,
-      "Is Array:",
-      Array.isArray(text)
-    );
-    this.actionText.innerHTML =
-      this.actionText.innerHTML +
-      "<br>" +
-      (Array.isArray(text) ? text.join("<br>") : text);
+    const items = Array.isArray(text) ? text : [text];
+
+    items.forEach((item) => {
+      this.actionNoteList.appendChild(document.createElement("li")).innerHTML =
+        item;
+    });
+
     return this;
+  }
+
+  setText(text) {
+    while (this.actionNoteList.firstChild) {
+      this.actionNoteList.removeChild(this.actionNoteList.firstChild);
+    }
+
+    return this.appendText(text);
   }
 
   success() {
@@ -64,13 +77,6 @@ class Action {
 
   loading() {
     this.actionIcon.className = "loading";
-    return this;
-  }
-
-  setText(text) {
-    this.actionText.innerHTML =
-      this.title + "<br>" + (Array.isArray(text) ? text.join("<br>") : text);
-
     return this;
   }
 

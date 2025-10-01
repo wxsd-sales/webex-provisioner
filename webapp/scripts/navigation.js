@@ -74,13 +74,15 @@ class Navigation {
 
   login() {
     this._setState("selectedOption");
-    this._removeAvatar();
+    //this._removeAvatar();
   }
 
   logout() {
-    console.log("Setting UI to login");
     this._setState("login");
+    this._removeAvatar();
   }
+
+ 
 
   setOption(option) {
     this.selectOption(option);
@@ -170,9 +172,12 @@ class Navigation {
   addAction(text, icon) {
     const currentModal = document.querySelectorAll(
       `[data-state="${this.combinedState}"]`
-    )[0];
+    )?.[0];
 
-    const actionItems = currentModal.querySelectorAll(".actionItems")[0];
+    if(!currentModal) return
+    const actionItems = currentModal?.querySelectorAll(".actionItems")?.[0];
+
+    if(!actionItems) return
     const action = new Action(text, icon, this); 
     actionItems.appendChild(action.element);
     this.actions.push(action);

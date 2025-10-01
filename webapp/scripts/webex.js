@@ -127,6 +127,7 @@ class Webex {
         try {
           onProgress(results.length);
         } catch (e) {
+          console.error(e);
           // Ignore callback errors
         }
       }

@@ -143,7 +143,6 @@ async function loadCsvFileFromServer(filePath, fileName) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const csvText = await response.text();
-    [7, 10, 20, 21];
 
     // 2. Create a Blob from the CSV text content
     // The 'type' should match the MIME type of a CSV file.
@@ -184,37 +183,33 @@ async function loadCsvFileFromServer(filePath, fileName) {
   }
 }
 
-function processCsvFile(csvContent, requiredHeaders = ["Name"]) {
-  let isValid = true;
+/**
+ * Processes a CSV file and validates the headers and content.
+ * @param {string} csvContent - The CSV content to process.
+ * @param {string[]} requiredHeaders - The required headers to validate.
+ * @returns {string[]} An array of validation messages.
+ */
+function identifyCsvFileErrors(csvContent, requiredHeaders = ["Name"]) {
   let validationMessages = [];
 
   // 1. Parse CSV content
   const lines = csvContent.trim().split("\n");
   if (lines.length === 0) {
     validationMessages.push("The CSV file is empty");
-    isValid = false;
   }
 
   // 2. Validate column names (headers)
-  const headers = lines[0].split(",").map((header) => header.trim());
+  //const headers = lines[0].split(",").map((header) => header.trim());
 
-  if (headers.length !== requiredHeaders.length) {
-    validationMessages.push(
-      `Header count mismatch. Expected ${requiredHeaders.length} columns, but found ${headers.length}.`
-    );
-    isValid = false;
-  } else {
-    for (let i = 0; i < requiredHeaders.length; i++) {
-      if (headers[i] !== requiredHeaders[i]) {
-        validationMessages.push(
-          `Column mismatch at position ${i + 1}. requiredHeaders "${
-            requiredHeaders[i]
-          }", but found "${headers[i]}".`
-        );
-        isValid = false;
-      }
+  const headers = splitCSVLine(lines[0]);
+  console.log("headers", headers)
+
+  requiredHeaders.forEach((header) => {
+    if (!headers.includes(header)) {
+      validationMessages.push("Missing Column header: " + header);
     }
-  }
+  });
+
 
   // 3. Check for duplicates in the first column (assuming it's the 'ID' column as per expectedHeaders)
   const firstColumnValues = [];
@@ -232,7 +227,6 @@ function processCsvFile(csvContent, requiredHeaders = ["Name"]) {
           duplicateRows.set(value, [i]); // Store the current row index (1-based)
         }
         duplicateRows.get(value).push(i);
-        isValid = false; // Mark as invalid if duplicates are found
       }
       seenValues.add(value);
       firstColumnValues.push(value);
@@ -273,7 +267,6 @@ function parseCSV(csvText) {
   }
   return rows;
 }
-
 
 // Helper to split a CSV line into fields, supporting quoted values with commas
 function splitCSVLine(line) {

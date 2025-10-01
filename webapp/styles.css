@@ -345,8 +345,23 @@ a:active {
   border-radius: 8px;
 }
 
+.actionLeft {
+  text-align: start;
+ 
+
+}
+
 .actionText {
   text-align: start;
+  text-wrap: wrap;
+  
+}
+
+.actionNotes {
+  padding-left: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  
 }
 
 .actionIcon {
