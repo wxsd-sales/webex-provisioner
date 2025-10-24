@@ -20,17 +20,9 @@ const WEBEX_API_BASE_URL = "https://webexapis.com/v1";
 // --- DOM Elements ---
 
 const webexLogin = document.getElementById("webexLogin");
-// const avatarImage = document.getElementById("avatarImage");
-// const avatarInitials = document.getElementById("avatarInitials");
 const nameOrg = document.getElementById("nameOrg");
-// const fileUploadModal = document.getElementById("fileUploadModal");
 const loginButton = document.getElementById("loginButton");
-const logoutButton = document.getElementById("loginButton");
-// const dropArea = document.getElementById("dropArea");
-// const fileInput = document.getElementById("fileInput");
-// const uploadFile = document.getElementById("uploadFile");
-// const replaceFile = document.getElementById("replaceFile");
-// const createWorkspacesButton = document.getElementById("createWorkspaces");
+const logoutButton = document.getElementById("logoutButton");
 
 
 const nav = new Navigation();
