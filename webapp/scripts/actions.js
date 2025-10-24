@@ -12,7 +12,7 @@ class Action {
    * @param {String = 'loading' | 'error' | 'warning' | 'success' "} [icon = 'loading'] - icon
    */
   constructor(title, icon, nav) {
-    console.log('Creating Action:', title, icon)
+    console.log('Creating Action:', title)
     this.nav = nav;
     this.title = title;
     const allowedIcons = ["loading", "error", "warning", "success"];
@@ -37,6 +37,7 @@ class Action {
   }
 
   appendText(text) {
+    console.log('Action:', this.title,' - Appending Text:', text)
     const items = Array.isArray(text) ? text : [text];
 
     items.forEach((item) => {
@@ -48,6 +49,7 @@ class Action {
   }
 
   setText(text) {
+    console.log('Action:', this.title,' - Setting Text:', text)
     while (this.actionNoteList.firstChild) {
       this.actionNoteList.removeChild(this.actionNoteList.firstChild);
     }
@@ -55,29 +57,30 @@ class Action {
     return this.appendText(text);
   }
 
-  success() {
-    this.actionIcon.className = "success";
+  _setIcon(icon){
+    console.log('Action:', this.title,' - Setting Icon:', icon)
+    this.actionIcon.className = icon;
     return this;
+  }
+
+  success() {
+    return this._setIcon("success");
   }
 
   spinner() {
-    this.actionIcon.className = "spinner";
-    return this;
+    return this._setIcon("spinner");
   }
 
   error() {
-    this.actionIcon.className = "error";
-    return this;
+    return this._setIcon("error");
   }
 
   warning() {
-    this.actionIcon.className = "warning";
-    return this;
+    return this._setIcon("warning");
   }
 
   loading() {
-    this.actionIcon.className = "loading";
-    return this;
+    return this._setIcon("loading");
   }
 
   remove() {

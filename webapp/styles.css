@@ -347,14 +347,11 @@ a:active {
 
 .actionLeft {
   text-align: start;
- 
-
 }
 
 .actionText {
   text-align: start;
   text-wrap: wrap;
-  
 }
 
 .actionNotes {
@@ -362,9 +359,6 @@ a:active {
   margin-top: 5px;
   margin-bottom: 5px;
   
-}
-
-.actionIcon {
 }
 
 .warning {

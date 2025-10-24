@@ -34,16 +34,8 @@ class Webex {
     this.#scopes = scopes ?? null;
     this.#type = type;
     this.#apiBaseUrl = /v\d+$/.test(baseUrl) ? baseUrl.replace(/\/v\d+$/, '') : baseUrl
-    
-    //baseUrl.split("/").slice(0, -1).join("");
     this.#apiVersion = /v\d+$/.test(baseUrl)  ? baseUrl.match(/v\d+$/)[0] : 'v1';
-
     this.#baseUrlPlusVersion = this.#apiBaseUrl + '/' + this.#apiVersion;
-
-    console.log('BaseUrl', baseUrl, 'apiBaseUrl', this.#apiBaseUrl, 'apiVersion', this.#apiVersion)
-
-
-    console.log('this.#accessToken', this.#accessToken)
 
   }
 

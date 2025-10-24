@@ -15,25 +15,26 @@ const WEBEX_REDIRECT_URI = window.location.origin + window.location.pathname;
 const WEBEX_OAUTH_BASE_URL = "https://webexapis.com/v1/authorize";
 const WEBEX_API_BASE_URL = "https://webexapis.com/v1";
 
-const nav = new Navigation();
-nav.onStateChange(processStateChange);
+
 
 // --- DOM Elements ---
 
-//const loginModal = document.getElementById("loginModal");
 const webexLogin = document.getElementById("webexLogin");
-const avatarImage = document.getElementById("avatarImage");
-const avatarInitials = document.getElementById("avatarInitials");
+// const avatarImage = document.getElementById("avatarImage");
+// const avatarInitials = document.getElementById("avatarInitials");
 const nameOrg = document.getElementById("nameOrg");
-const fileUploadModal = document.getElementById("fileUploadModal");
+// const fileUploadModal = document.getElementById("fileUploadModal");
 const loginButton = document.getElementById("loginButton");
 const logoutButton = document.getElementById("loginButton");
-const dropArea = document.getElementById("dropArea");
-const fileInput = document.getElementById("fileInput");
-const uploadFile = document.getElementById("uploadFile");
-const replaceFile = document.getElementById("replaceFile");
-// const fileName = document.getElementById("fileName");
-const createWorkspacesButton = document.getElementById("createWorkspaces");
+// const dropArea = document.getElementById("dropArea");
+// const fileInput = document.getElementById("fileInput");
+// const uploadFile = document.getElementById("uploadFile");
+// const replaceFile = document.getElementById("replaceFile");
+// const createWorkspacesButton = document.getElementById("createWorkspaces");
+
+
+const nav = new Navigation();
+nav.onStateChange(processStateChange);
 
 const hostedWebApp = window.location.protocol.startsWith("http");
 if (!hostedWebApp) webexLogin.classList.add("hidden");
@@ -43,12 +44,14 @@ let workspaceNames = [];
 let jobfile;
 let jobRunning = false;
 
-// --- Helper Functions ---
-
 window.onbeforeunload = (event) => {
   if (!jobRunning) return;
   event.preventDefault();
 };
+
+// --- Helper Functions ---
+
+
 
 /**
  * Initiates the Webex OAuth login flow.
@@ -87,15 +90,19 @@ async function processStateChange(state) {
   console.log("Stage Changed:", state);
 
   if (state == "workspacesreview") {
-    reviewJobFile(jobfile, ["id"])
+
+    reviewJobFile(jobfile, ["DisplayName"]);
     const job = parseCSV(jobfile);
+    console.log("job", JSON.stringify(job));
     const workspaces = await getWorkspaces();
     reviewConflicts(workspaces, job);
     nav.enableNext();
+
   } else if (state == "workspacesrunJob") {
 
     jobRunning = true;
     const job = parseCSV(jobfile);
+    console.log("job", job)
     const workspaces = await createWorkspaces(job);
     const csvExport = nav.addAction("Exporting CSV").loading();
     downloadJsonAsCsv(workspaces, "workspaces.csv");
@@ -103,11 +110,13 @@ async function processStateChange(state) {
     jobRunning = false;
 
   } else if (state == "deviceCodesreview") {
-    reviewJobFile(jobfile, ["id"])
+
+    reviewJobFile(jobfile, ["WorkspaceId"]);
     const job = parseCSV(jobfile);
     const workspaces = await getWorkspaces();
     reviewConflicts(workspaces, job);
     nav.enableNext();
+
   } else if (state == "deviceCodesrunJob") {
 
     jobRunning = true;
@@ -119,7 +128,7 @@ async function processStateChange(state) {
 
   } else if (state == "workspacesDeviceCodesreview") {
 
-    reviewJobFile(jobfile, ["Workspace Name"])
+    reviewJobFile(jobfile, ["DisplayName"]);
     const job = parseCSV(jobfile);
     const workspaces = await getWorkspaces();
     reviewConflicts(workspaces, job);
@@ -133,7 +142,7 @@ async function processStateChange(state) {
     const activationCodes = await generateActivationCodes(workspaces);
     exportResults(activationCodes, "workspaces");
     jobRunning = false;
-
+    
   }
 }
 
@@ -324,16 +333,12 @@ function reviewConflicts(workspaces = [], job) {
   console.log("Reviewing Conflicts");
 
   const action = nav.addAction("Checking Conflicts").loading();
-
   const existingWorkspaces = workspaces.map(({ displayName }) => displayName);
   const newWorkspaces = job.map((row) => row["Workspace Name"]);
-
   const conflicts = checkConflicts(existingWorkspaces, newWorkspaces);
 
   if (conflicts.length > 0) {
-    action
-      .appendText("Conflicts Found: " + conflicts.length)
-      .warning();
+    action.appendText("Conflicts Found: " + conflicts.length).warning();
   } else {
     action.appendText("No Conflicts").success();
   }
@@ -374,48 +379,29 @@ async function getWorkspaces() {
   });
 }
 
-async function processWorkspacesRunJob() {
-  console.log("Processing Workspaces RunJob");
-
-  const job = parseCSV(jobfile);
-  const results = [];
-  const action = nav.addAction("Creating Workspaces");
-
-  for (let i = 0; i < job.length; i++) {
-    action.setText("Created:  " + i + "/" + job.length);
-    const workspaceName = job[i]["Workspace Name"];
-    const newWorkspace = await webex.createWorkspace(workspaceName);
-    if (newWorkspace) {
-      const id = newWorkspace.id;
-      results.push({ id, ...job[i] });
-    }
-  }
-
-  action.setText("Created:  " + results.length + "/" + job.length).success();
-  downloadJsonAsCsv(results, "workspaces.csv");
-}
 
 async function createWorkspaces(job) {
   console.log("Createing Workspaces Workspaces");
 
   const results = [];
-
   const createWorkspaces = nav.addAction("Creating Workspaces");
 
   for (let i = 0; i < job.length; i++) {
-    createWorkspaces.setText("Created:  " + i + "/" + job.length);
-    const workspaceName = job[i]["Workspace Name"];
-    console.log("workspaceName", workspaceName);
+    createWorkspaces.setText("Created:  " + i + "/" + job.length );
+    const fields = Object.keys(job[i]);
+
+    const workspaceName = job[i]["DisplayName"];
     const newWorkspace = await webex.createWorkspace(workspaceName);
     if (newWorkspace) {
-      const id = newWorkspace.id;
-      results.push({ id, ...job[i] });
+      const {id, ...remaining} = newWorkspace;
+      results.push({ "WorkspaceId": id, ...remaining, ...job[i] });
     }
   }
 
   createWorkspaces.setText("Created:  " + results.length + "/" + job.length);
-
   createWorkspaces.success();
+
+  console.log(results)
   return results;
 }
 
@@ -473,11 +459,7 @@ async function test() {
   }, 1000);
 }
 
-function workspacesFound(count) {
-  console.log(`Fetched so far: ${count}`);
-}
 
-document.querySelectorAll(".jobReview").forEach((dropArea) => {});
 
 // Iterate over each file upload area and add listner
 document.querySelectorAll(".file-upload-area").forEach((dropArea) => {

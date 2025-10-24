@@ -189,7 +189,7 @@ async function loadCsvFileFromServer(filePath, fileName) {
  * @param {string[]} requiredHeaders - The required headers to validate.
  * @returns {string[]} An array of validation messages.
  */
-function identifyCsvFileErrors(csvContent, requiredHeaders = ["Name"]) {
+function identifyCsvFileErrors(csvContent, requiredHeaders = ["displayName"]) {
   let validationMessages = [];
 
   // 1. Parse CSV content
@@ -202,14 +202,13 @@ function identifyCsvFileErrors(csvContent, requiredHeaders = ["Name"]) {
   //const headers = lines[0].split(",").map((header) => header.trim());
 
   const headers = splitCSVLine(lines[0]);
-  console.log("headers", headers)
+  console.log("headers", headers);
 
   requiredHeaders.forEach((header) => {
     if (!headers.includes(header)) {
       validationMessages.push("Missing Column header: " + header);
     }
   });
-
 
   // 3. Check for duplicates in the first column (assuming it's the 'ID' column as per expectedHeaders)
   const firstColumnValues = [];
@@ -247,13 +246,20 @@ function identifyCsvFileErrors(csvContent, requiredHeaders = ["Name"]) {
 }
 
 function parseCSV(csvText) {
+
+  console.log('csvText.trim()[0]', csvText.trim())
   // Split the CSV into lines, trim whitespace
-  const lines = csvText.trim().split(/\r?\n/);
+  const lines = csvText.trim().split(/\r?\n?[\r\n]/);
 
   if (lines.length === 0) return [];
+  console.log('Line[0]', lines[0], lines[1])
 
   // Split headers, handling simple quoted fields
-  const headers = splitCSVLine(lines[0]);
+  const headers = splitCSVLine(lines[0]).map((header) =>
+    decapitalizeFirstLetter(header)
+  );
+
+  console.log('decapitalized headers', headers)
 
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
@@ -263,13 +269,14 @@ function parseCSV(csvText) {
       rowObj[header] =
         values[idx] !== undefined && values[idx] !== "" ? values[idx] : null;
     });
-    rows.push(rowObj);
+    rows.push(unFlattenObject(rowObj));
   }
   return rows;
 }
 
 // Helper to split a CSV line into fields, supporting quoted values with commas
 function splitCSVLine(line) {
+  line = line.replace(/(\r\n|\n|\r)/gm, "");
   const result = [];
   let current = "";
   let inQuotes = false;
@@ -289,14 +296,16 @@ function splitCSVLine(line) {
     } else {
       current += char;
     }
+    // console.log("current", current)
+    // console.log("result", result)
+
+    //result.push(current);
   }
-  result.push(current);
   return result;
 }
 
 function checkConflicts(existingWorkspaces, newWorkspaces) {
   const conflicts = [];
-
   const existingWorkspacesSet = new Set(existingWorkspaces);
 
   for (const workspace of newWorkspaces) {
@@ -314,7 +323,7 @@ function downloadJsonAsCsv(jsonData, filename = "data.csv") {
     return;
   }
 
-  const headers = Object.keys(jsonData[0]);
+  const headers = Object.keys(flattenObject(jsonData[0]));
   const csvHeader = headers
     .map((header) => `"${header.replace(/"/g, '""')}"`)
     .join(",");
@@ -322,7 +331,8 @@ function downloadJsonAsCsv(jsonData, filename = "data.csv") {
   const csvRows = jsonData.map((row) => {
     return headers
       .map((header) => {
-        let value = row[header];
+        let flattenRowObj = flattenObject(row);
+        let value = flattenRowObj[header];
         if (value === null || value === undefined) {
           value = "";
         } else if (typeof value === "object") {
@@ -345,7 +355,6 @@ function downloadJsonAsCsv(jsonData, filename = "data.csv") {
   const csvString = [csvHeader, ...csvRows].join("\n");
   const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-
   const link = document.createElement("a");
   link.href = url;
   link.setAttribute("download", filename);
@@ -354,3 +363,110 @@ function downloadJsonAsCsv(jsonData, filename = "data.csv") {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+function capitalizeFirstLetter(val) {
+  return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
+
+function decapitalizeFirstLetter(val) {
+  return String(val).charAt(0).toLowerCase() + String(val).slice(1);
+}
+
+function flattenObject(obj) {
+  const result = {};
+
+  for (var i in obj) {
+    if (!obj.hasOwnProperty(i)) continue;
+
+    if (typeof obj[i] == "object" && obj[i] !== null) {
+      var flatObject = flattenObject(obj[i]);
+      for (var x in flatObject) {
+        if (!flatObject.hasOwnProperty(x)) continue;
+
+        result[capitalizeFirstLetter(i) + "." + x] = flatObject[x];
+      }
+    } else {
+      result[capitalizeFirstLetter(i)] = obj[i];
+    }
+  }
+  return result;
+}
+
+function unFlattenObject(obj) {
+  const result = {};
+
+  for (var i in obj) {
+    if (!obj.hasOwnProperty(i)) continue;
+
+    var keys = i.split(".");
+    var parent = result; // 'parent' refers to the object or array we are currently building into
+    var lastKeyIndex = keys.length - 1;
+
+    for (var j = 0; j < lastKeyIndex; j++) {
+      var currentKeySegment = keys[j]; // The key or index for the current level
+      var nextKeySegment = keys[j + 1]; // Look ahead to determine if the next level should be an array
+
+      // Check if the next key segment is a numeric string (e.g., "0", "1", indicating an array index)
+      const isNextKeySegmentNumeric = /^\d+$/.test(nextKeySegment);
+
+      if (isNextKeySegmentNumeric) {
+        // If the next segment is numeric, the current 'currentKeySegment' should lead to an array.
+        // Ensure that 'parent[currentKeySegment]' is an array.
+        if (!parent[currentKeySegment]) {
+          parent[currentKeySegment] = [];
+        } else if (!Array.isArray(parent[currentKeySegment])) {
+          // Conflict: if it exists but is not an array, convert it to an array.
+          // This might lead to data loss if parent[currentKeySegment] previously held an object
+          // with other properties, but it prioritizes the array structure as requested.
+          parent[currentKeySegment] = [];
+        }
+      } else {
+        // If the next segment is not numeric, the current 'currentKeySegment' should lead to an object.
+        // Ensure that 'parent[currentKeySegment]' is an object.
+        if (!parent[currentKeySegment]) {
+          parent[currentKeySegment] = {};
+        } else if (Array.isArray(parent[currentKeySegment])) {
+          // Conflict: if it exists but is an array, convert it to an object.
+          // This might lead to data loss, prioritizing the object structure.
+          parent[currentKeySegment] = {};
+        }
+      }
+
+      // Move to the next level in the 'parent' reference
+      parent = parent[currentKeySegment];
+    }
+
+    // Handle the last key segment and assign the final value
+    var finalKeySegment = keys[lastKeyIndex];
+    const isFinalKeySegmentNumeric = /^\d+$/.test(finalKeySegment);
+
+    if (isFinalKeySegmentNumeric) {
+      // If the last key segment is numeric, assign the value to an array index.
+      // The 'parent' at this point should already be an array due to the preceding loop logic.
+      parent[parseInt(finalKeySegment, 10)] = obj[i];
+    } else {
+      // If the last key segment is not numeric, assign the value to an object property.
+      parent[finalKeySegment] = obj[i];
+    }
+  }
+
+  return result;
+}
+
+
+
+const textCSV=`WorkspaceId,OrgId,DisplayName,SipAddress,Created,Calling.Type,Calendar.Type,HotdeskingStatus,DeviceHostedMeetings.Enabled,SupportedDevices,DevicePlatform,PlannedMaintenance.Mode,Health.Level,Test.0,Test.1
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFLzA3ZmJlNTFmLWI3MTQtNDVmYi1iZmE3LThkZTMyNThlYTY0OA==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 1,my_workspace_1499890@coe-sbx.rooms.webex.com,2025-10-01T15:36:13.583Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2YxZWE2M2Y5LWZkYTAtNDI3Ni04OGI2LWNlZGI4MGY0NmNmNQ==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 2,my_workspace_2854748@coe-sbx.rooms.webex.com,2025-10-01T15:36:14.362Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFLzY5MWNmYTVmLTg4YTgtNDQwYy1hYzgxLWNjYjVkMzU0NjlmOQ==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 3,my_workspace_3242936@coe-sbx.rooms.webex.com,2025-10-01T15:36:15.428Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFLzcxOGRlN2ZjLWRmZTEtNDRhMS04NjNhLTNlNmNiNDFkMWQ0Yg==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 4,my_workspace_4518424@coe-sbx.rooms.webex.com,2025-10-01T15:36:16.507Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFLzUxYjZkYTY5LWMxYzQtNGFkNC1iZTdlLWU0YTUyZDBmMThkOQ==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 5,my_workspace_5615544@coe-sbx.rooms.webex.com,2025-10-01T15:36:17.601Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFLzFkYzRhYjU4LThkYjMtNGQ3ZS04NmQ3LTZjNTljYmI0MGZjZQ==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 6,my_workspace_6441493@coe-sbx.rooms.webex.com,2025-10-01T15:36:18.370Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2JkM2NjMDZjLTA4MDYtNGE0Ni04Zjc3LTI3NTA5NjNlZDhmNQ==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 7,my_workspace_7040517@coe-sbx.rooms.webex.com,2025-10-01T15:36:19.429Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFLzY1OWYzYTk1LWY0OGYtNGNlNi05MjM4LTMwMDI0NGUzNWQ3Zg==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 8,my_workspace_8089290@coe-sbx.rooms.webex.com,2025-10-01T15:36:20.292Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second
+Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1BMQUNFL2NkOTM5MWM5LWE4NWYtNGVjNi1iNmQ0LTBkNDU4YmFkNzQwZg==,Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi8xZWJmMWI5Yy00NjQ4LTRkMjUtYWY4OS1iOGRhZjUyNDU4YmQ,My workspace 9,my_workspace_9896727@coe-sbx.rooms.webex.com,2025-10-01T15:36:21.066Z,freeCalling,none,off,FALSE,collaborationDevices,cisco,off,ok,first,second`;
+
+
+
+const parsed = parseCSV(textCSV);
+console.log(parsed);
