@@ -2,6 +2,8 @@
 
 This is an example web app that enables an admin to bulk provision Workspaces on a Webex Org from a list of Workspace Names and other details.
 
+[![Web App Screenshot](/screenshots/webapp.png)](https://wxsd-sales.github.io/webex-provisioner/)
+
 ## Overview
 
 This web app lets you easily you easily sign in with a Webex Admin account via OAuth and upload a bulk CSV file to bulk create Workspaces or generate Device Activation Codes.
